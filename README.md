@@ -1,80 +1,115 @@
-# Data Masking and ETL Tool using Shell Scripting
+# ETL Pipeline for Server Log Processing
 
-## **Objective**
-Create a tool that:
-1. Extracts data from a source.
-2. Transforms the data (e.g., masks sensitive information like emails and credit card numbers).
-3. Loads the processed data into a destination file.
+This document provides instructions to set up and execute a simple ETL pipeline using Bash scripting to process server logs.
 
-This tool is implemented using `bash`, `sed`, and `awk` to perform the ETL process.
+## Objective
+To extract, filter, and save error and warning logs from a server log file for further analysis.
 
 ---
 
-## **Script**
-Save the following script as `etl_tool.sh`:
+## Prerequisites
+
+1. **Bash Shell**: Ensure you have access to a Unix/Linux environment with Bash installed.
+2. **Sample Log File**: Create a file named `server.log` with the following sample data:
+
+    ```
+    2024-12-01 12:00:01 INFO Starting server...
+    2024-12-01 12:05:23 ERROR Failed to connect to database
+    2024-12-01 12:10:45 WARN High memory usage detected
+    2024-12-01 12:15:12 INFO Request received from IP 192.168.1.5
+    2024-12-01 12:20:08 ERROR Timeout while reading from API
+    2024-12-01 12:25:30 INFO Server health check passed
+    2024-12-01 12:30:00 WARN Disk space usage exceeds 80%
+    ```
+3. **Script File**: Create a Bash script named `log_etl.sh` with the content provided below.
+
+---
+
+## ETL Script
+
+### Create the Script File (`log_etl.sh`)
 
 ```bash
 #!/bin/bash
 
-# Define source and destination files
-SOURCE_FILE="input_data.txt"
-DEST_FILE="processed_data.txt"
+# Define file paths
+SOURCE_FILE="server.log"
+EXTRACTED_FILE="extracted_logs.log"
+TRANSFORMED_FILE="transformed_logs.log"
+LOADED_FILE="error_report.log"
 
-echo "Starting the ETL process..."
+# Step 1: Extract
+echo "Extracting data from $SOURCE_FILE..."
+cat $SOURCE_FILE > $EXTRACTED_FILE
+echo "Data extracted to $EXTRACTED_FILE."
 
-# Step 1: Extract data
-if [ ! -f "$SOURCE_FILE" ]; then
-    echo "Error: Source file $SOURCE_FILE does not exist."
-    exit 1
-fi
+# Step 2: Transform
+echo "Filtering ERROR and WARN logs from $EXTRACTED_FILE..."
+grep -E "ERROR|WARN" $EXTRACTED_FILE > $TRANSFORMED_FILE
+echo "Filtered data saved to $TRANSFORMED_FILE."
 
-data=$(cat "$SOURCE_FILE")
+# Step 3: Load
+echo "Loading transformed logs into $LOADED_FILE..."
+mv $TRANSFORMED_FILE $LOADED_FILE
+echo "ETL process completed. Final report saved to $LOADED_FILE."
 
-# Step 2: Transform data
-transformed_data=$(echo "$data" | sed -E 's/([a-zA-Z])[a-zA-Z]*\.([a-zA-Z])[a-zA-Z]*@/\1***.\2**@/g' | \
-    sed -E 's/([0-9]{4})-[0-9]{4}-[0-9]{4}-([0-9]{4})/\1-****-****-\2/g')
-
-# Step 3: Load data into destination file
-echo "$transformed_data" > "$DEST_FILE"
-
-echo "ETL process completed. Processed data saved in $DEST_FILE."
+# Final Summary
+echo "Summary of Logs:"
+echo "Total Logs: $(wc -l < $SOURCE_FILE)"
+echo "Errors and Warnings: $(wc -l < $LOADED_FILE)"
 ```
 
 ---
 
-## **How to Run**
+## Steps to Execute
 
-### 1. **Prepare the Source File:**
-Create a file named `input_data.txt` with the following sample content:
+1. **Create the Log File**  
+   Save the provided sample log data into a file named `server.log` in your working directory.
+
+2. **Save the Script**  
+   Save the Bash script code into a file named `log_etl.sh` in the same directory.
+
+3. **Grant Execute Permissions**  
+   Make the script executable by running the following command:
+   ```bash
+   chmod +x log_etl.sh
+   ```
+
+4. **Run the Script**  
+   Execute the script using:
+   ```bash
+   ./log_etl.sh
+   ```
+
+5. **View Output**  
+   - `extracted_logs.log`: A copy of the original log file.
+   - `error_report.log`: Contains only the filtered error and warning logs.
+
+---
+
+## Example Output
+
+After execution, the file `error_report.log` will contain:
+
 ```text
-Name: John Doe, Email: john.doe@example.com, Card: 1234-5678-9012-3456
-Name: Jane Smith, Email: jane.smith@domain.com, Card: 9876-5432-1098-7654
-```
-
-### 2. **Make the Script Executable:**
-```bash
-chmod +x etl_tool.sh
-```
-
-### 3. **Run the Script:**
-```bash
-./etl_tool.sh
-```
-
-### 4. **Check the Output:**
-The masked data will be saved in `processed_data.txt`. Example output:
-```text
-Name: John Doe, Email: j***.d**@example.com, Card: 1234-****-****-3456
-Name: Jane Smith, Email: j***.s*****@domain.com, Card: 9876-****-****-7654
+2024-12-01 12:05:23 ERROR Failed to connect to database
+2024-12-01 12:10:45 WARN High memory usage detected
+2024-12-01 12:20:08 ERROR Timeout while reading from API
+2024-12-01 12:30:00 WARN Disk space usage exceeds 80%
 ```
 
 ---
 
-## **Extending the Tool**
-You can enhance the tool by:
-- Adding support for additional data transformations.
-- Accepting dynamic input/output file names as arguments.
-- Integrating the script into a CI/CD pipeline for automated ETL processes.
+## Extensions
 
-Enjoy building secure and efficient ETL pipelines! 🚀
+1. **Dynamic Date Filtering**: Modify the script to extract logs from specific dates using `grep`.
+2. **Database Integration**: Load the filtered logs into a database (e.g., MySQL) using commands or APIs.
+3. **Alert Notifications**: Send critical errors via email or Slack using `mail` or webhook integrations.
+4. **Automation**: Schedule the script using `cron` for periodic execution.
+
+---
+
+## Conclusion
+
+This ETL pipeline demonstrates a simple yet effective way to process server logs using Bash scripting. Customize it further to suit your operational needs or integrate with advanced data processing systems.
 

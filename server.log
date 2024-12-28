@@ -1,0 +1,9 @@
+2024-12-01 12:00:01 INFO Starting server...
+2024-12-01 12:05:23 ERROR Failed to connect to database
+2024-12-01 12:10:45 WARN High memory usage detected
+2024-12-01 12:15:12 INFO Request received from IP 192.168.1.5
+2024-12-01 12:20:08 ERROR Timeout while reading from API
+2024-12-01 12:25:30 INFO Server health check passed
+2024-12-01 12:30:00 WARN Disk space usage exceeds 80%
+
+~                                                        
